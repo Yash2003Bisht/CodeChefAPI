@@ -9,12 +9,13 @@ from concurrent.futures import ThreadPoolExecutor
 try:
     # for API use
     from .user_headers import USER_AGENTS
+
     API = True
 except ImportError:
     # for direct use
     from user_headers import USER_AGENTS
-    API = False
 
+    API = False
 
 LANG = {
     'PYTH 3': 'py',
@@ -50,14 +51,14 @@ def get_soup_object(url: str):
         try:
             res = requests.get(url, timeout=120, headers=random.choice(USER_AGENTS))
             soup = BeautifulSoup(res.content, 'html.parser')
-    
+
             if res.status_code == 200:
                 return soup
 
         except Exception as err:
             print(f'\nerror -> {err}')
             time.sleep(random.randrange(15, 45))
-    
+
     return None
 
 
@@ -68,16 +69,17 @@ def get_all_solved_links(username: str):
         username (str): profile name on codechef
 
     Returns:
-        list: all unscraped link list
+        list: all un-scraped link list
     """
     url = f'{BASE_URL}/users/{username}'
     soup = get_soup_object(url)
+    links = []
 
     try:
-        anchor_tag =  soup.find('section', {'class': 'rating-data-section problems-solved'})
+        anchor_tag = soup.find('section', {'class': 'rating-data-section problems-solved'})
 
         if anchor_tag is None:
-            
+
             if API:
                 return {
                     'status': 404,
@@ -86,23 +88,21 @@ def get_all_solved_links(username: str):
             else:
                 print('Invalid username')
                 quit()
-        
+
         else:
             links = anchor_tag.find_all('a')
 
-    
     except AttributeError:
         if API:
             return {
                 'status': 500,
                 'message': 'Internal server error'
             }
-        
+
         else:
             print('max retries reached')
             quit()
-    
-    
+
     if not API:
         base_dir = 'solutions'
 
@@ -111,12 +111,12 @@ def get_all_solved_links(username: str):
 
             # filter out the already scraped link
             unscraped_links = list(filter(lambda link: link.get_text() not in already_scraped, links))
-            
+
             return {
                 'status': 200,
                 'links': unscraped_links
             }
-    
+
     return {
         'status': 200,
         'links': links
@@ -136,7 +136,7 @@ def get_clean_code(code: str):
         if code[i] != '\n':
             code = code[i:]
             break
-    
+
     return code
 
 
@@ -150,6 +150,7 @@ def get_solution_text(question: str, lang: str, solution_id: int):
     """
     url = f'{BASE_URL}/viewplaintext/{solution_id}'
     soup = get_soup_object(url)
+    comment_symbol = '//'
 
     try:
         text = get_clean_code(soup.get_text())
@@ -159,10 +160,9 @@ def get_solution_text(question: str, lang: str, solution_id: int):
         base_dir = 'solutions'
         path = os.path.join(base_dir, question)
 
-
         if not os.path.exists(path):
             os.makedirs(path)
-        
+
         if lang == 'py':
             comment_symbol = '#'
         elif lang == 'pp':
@@ -170,20 +170,18 @@ def get_solution_text(question: str, lang: str, solution_id: int):
             comment_symbol_end = '}'
         elif lang == 'adb':
             comment_symbol = '--'
-        else:
-            comment_symbol = '//'
 
         total = len(os.listdir(path)) + 1
 
         with open(f'{path}/{question}_{total}.{lang}', 'w') as file:
             if lang == 'pp':
-                file.write(f'{comment_symbol_start} QUESTION URL: {BASE_URL}/problems/{question} {comment_symbol_end} \n\n{text}')
+                file.write(
+                    f'{comment_symbol_start} QUESTION URL: {BASE_URL}/problems/{question} {comment_symbol_end} \n\n{text}')
             else:
                 file.write(f'{comment_symbol} QUESTION URL: {BASE_URL}/problems/{question}\n\n{text}')
 
         return True
-        
-    
+
     except AttributeError:
         print(f'\nAttributeError')
         return False
@@ -191,7 +189,7 @@ def get_solution_text(question: str, lang: str, solution_id: int):
     except KeyError as err:
         print(f'\nKeyError for -> {err}')
         return False
-    
+
     except Exception as err:
         print(f'\error -> {err}')
         return False
@@ -210,16 +208,17 @@ def get_solution_details(solution_url: str):
         url = BASE_URL + solution_url.get('href')
         soup = get_soup_object(url)
         tr = soup.find('tbody').find_all('tr')
+        solution_scraped = False
 
         if tr is None:
             return 0
 
         for row in tr:
             col = row.find_all('td')
-            solution_scrpaed = get_solution_text(solution_url.get_text(), col[6].get_text(), col[0].get_text())
-        
-        return 1 if solution_scrpaed else 0
-    
+            solution_scraped = get_solution_text(solution_url.get_text(), col[6].get_text(), col[0].get_text())
+
+        return 1 if solution_scraped else 0
+
     except AttributeError:
         return 0
 
