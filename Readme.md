@@ -1,5 +1,5 @@
 # CodeChefAPI
-The codechef API is for educational purposes only.
+The codechef API is for educational purposes only. [Heroku deployment](https://codechef-api-education-only.herokuapp.com)
 
 ## Endpoints
 1. user-stats/<user_name>
