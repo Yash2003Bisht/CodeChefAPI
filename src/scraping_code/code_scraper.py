@@ -9,13 +9,10 @@ from concurrent.futures import ThreadPoolExecutor
 try:
     # for API use
     from .user_headers import USER_AGENTS
-
-    API = True
+    
 except ImportError:
     # for direct use
     from user_headers import USER_AGENTS
-
-    API = False
 
 LANG = {
     'PYTH 3': 'py',
@@ -62,7 +59,7 @@ def get_soup_object(url: str):
     return None
 
 
-def get_all_solved_links(username: str):
+def get_all_solved_links(username: str, usage: str):
     """User all solved question links
 
     Args:
@@ -80,7 +77,7 @@ def get_all_solved_links(username: str):
 
         if anchor_tag is None:
 
-            if API:
+            if usage == 'api':
                 return {
                     'status': 404,
                     'message': 'Invalid username'
@@ -93,7 +90,7 @@ def get_all_solved_links(username: str):
             links = anchor_tag.find_all('a')
 
     except AttributeError:
-        if API:
+        if usage == 'normal':
             return {
                 'status': 500,
                 'message': 'Internal server error'
@@ -103,7 +100,7 @@ def get_all_solved_links(username: str):
             print('max retries reached')
             quit()
 
-    if not API:
+    if usage == 'normal':
         base_dir = 'solutions'
 
         if os.path.exists(base_dir):
@@ -229,7 +226,7 @@ def main(username: str):
     Args:
         username (str): profile name on codechef
     """
-    res = get_all_solved_links(username)
+    res = get_all_solved_links(username, 'normal')
     total_links = len(res['links'])
     executor = ThreadPoolExecutor(max(1, total_links))
     scraped = 0

@@ -26,7 +26,7 @@ def user_stats(user_stats_user_name):
 
 @endpoints.route('/solved/<string:solved_question_user_name>')
 def solved_question(solved_question_user_name):
-    res = get_all_solved_links(solved_question_user_name)
+    res = get_all_solved_links(solved_question_user_name, 'api')
     total_links = 0
     links = []
 
