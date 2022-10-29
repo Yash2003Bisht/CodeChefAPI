@@ -31,7 +31,17 @@ LANG = {
     'PYPY2': 'py',
     'PYPY': 'py',
     'ADA': 'adb',
+    'C#': 'cs',
+    'NODEJS': 'js',
+    'JS': 'js',
+    'GO': 'go',
+    'KTLN': 'kt',
+    'RUBY': 'ruby',
+    'rust': 'rs',
 }
+
+print(LANG)
+
 BASE_URL = 'https://www.codechef.com'
 
 
