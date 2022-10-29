@@ -40,8 +40,6 @@ LANG = {
     'rust': 'rs',
 }
 
-print(LANG)
-
 BASE_URL = 'https://www.codechef.com'
 
 
