@@ -146,13 +146,14 @@ def get_clean_code(code: str):
     return code
 
 
-def get_solution_text(question: str, lang: str, solution_id: int, status: str):
+def get_solution_text(question: str, lang: str, solution_id: str, status: str):
     """Text solution of a problem
 
     Args:
         question (str): question name
         lang (str): programming language used
-        solution_id (int): solution id
+        solution_id (str): solution id
+        status (str): status of solution (accepted, wrong answer, runtime error etc.)
     """
     url = f'{BASE_URL}/viewplaintext/{solution_id}'
     soup = get_soup_object(url)
