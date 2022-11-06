@@ -72,6 +72,7 @@ def get_all_solved_links(username: str, usage: str):
 
     Args:
         username (str): profile name on codechef
+        usage (str): using as API or direct
 
     Returns:
         list: all un-scraped link list
@@ -145,7 +146,7 @@ def get_clean_code(code: str):
     return code
 
 
-def get_solution_text(question: str, lang: str, solution_id: int):
+def get_solution_text(question: str, lang: str, solution_id: int, status: str):
     """Text solution of a problem
 
     Args:
@@ -181,9 +182,16 @@ def get_solution_text(question: str, lang: str, solution_id: int):
         with open(f'{path}/{question}_{total}.{lang}', 'w') as file:
             if lang == 'pp':
                 file.write(
-                    f'{comment_symbol_start} QUESTION URL: {BASE_URL}/problems/{question} {comment_symbol_end} \n\n{text}')
+                    f'{comment_symbol_start} QUESTION URL: {BASE_URL}/problems/{question} {comment_symbol_end}\n'
+                    f'{comment_symbol_start} STATUS: {status} {comment_symbol_end}\n\n'
+                    f'{text}'
+                )
             else:
-                file.write(f'{comment_symbol} QUESTION URL: {BASE_URL}/problems/{question}\n\n{text}')
+                file.write(
+                    f'{comment_symbol} QUESTION URL: {BASE_URL}/problems/{question}\n'
+                    f'{comment_symbol} STATUS: {status}\n\n'
+                    f'{text}'
+                )
 
         return True
 
@@ -207,7 +215,7 @@ def get_solution_details(solution_url: str):
         solution_url (str): solution url
 
     Returns:
-        int: details scraped
+        int: 1 if details scraped else 0
     """
     try:
         url = BASE_URL + solution_url.get('href')
@@ -220,7 +228,8 @@ def get_solution_details(solution_url: str):
 
         for row in tr:
             col = row.find_all('td')
-            solution_scraped = get_solution_text(solution_url.get_text(), col[6].get_text(), col[0].get_text())
+            solution_scraped = get_solution_text(solution_url.get_text(), col[6].get_text(),
+                                                    col[0].get_text(), col[3].find('span')['title'])
 
         return 1 if solution_scraped else 0
 
