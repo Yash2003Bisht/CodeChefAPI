@@ -146,7 +146,7 @@ def get_clean_code(code: str):
     return code
 
 
-def get_solution_text(question: str, lang: str, solution_id: str, status: str):
+def get_solution_text(question: str, lang: str, solution_id: str, status: str, time: str, memory: str):
     """Text solution of a problem
 
     Args:
@@ -154,6 +154,8 @@ def get_solution_text(question: str, lang: str, solution_id: str, status: str):
         lang (str): programming language used
         solution_id (str): solution id
         status (str): status of solution (accepted, wrong answer, runtime error etc.)
+        time (str): execution time
+        memory (str): memory usage
     """
     url = f'{BASE_URL}/viewplaintext/{solution_id}'
     soup = get_soup_object(url)
@@ -184,13 +186,17 @@ def get_solution_text(question: str, lang: str, solution_id: str, status: str):
             if lang == 'pp':
                 file.write(
                     f'{comment_symbol_start} QUESTION URL: {BASE_URL}/problems/{question} {comment_symbol_end}\n'
-                    f'{comment_symbol_start} STATUS: {status} {comment_symbol_end}\n\n'
+                    f'{comment_symbol_start} STATUS: {status} {comment_symbol_end}\n'
+                    f'{comment_symbol_start} TIME: {time} {comment_symbol_end}\n'
+                    f'{comment_symbol_start} MEMORY: {memory} {comment_symbol_end}\n\n'
                     f'{text}'
                 )
             else:
                 file.write(
                     f'{comment_symbol} QUESTION URL: {BASE_URL}/problems/{question}\n'
-                    f'{comment_symbol} STATUS: {status}\n\n'
+                    f'{comment_symbol} STATUS: {status}\n'
+                    f'{comment_symbol} TIME: {time}\n'
+                    f'{comment_symbol} MEMORY: {memory}\n\n'
                     f'{text}'
                 )
 
@@ -230,7 +236,8 @@ def get_solution_details(solution_url: str):
         for row in tr:
             col = row.find_all('td')
             solution_scraped = get_solution_text(solution_url.get_text(), col[6].get_text(),
-                                                    col[0].get_text(), col[3].find('span')['title'])
+                                                col[0].get_text(), col[3].find('span')['title'],
+                                                col[4].get_text(), col[5].get_text())
 
         return 1 if solution_scraped else 0
 
