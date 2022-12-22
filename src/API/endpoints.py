@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from scraping_code import BASE_URL, get_all_solved_links, get_user_stats, get_submissions_details, multiple_threads_scraping
 
 endpoints = Blueprint('endpoints', __name__)
@@ -18,38 +18,66 @@ def root():
     return jsonify(data)
 
 
-@endpoints.route('/user-stats/<string:user_stats_user_name>')
-def user_stats(user_stats_user_name):
-    data = get_user_stats(user_stats_user_name)
-    return jsonify(data)
+@endpoints.route('/user-stats', methods=['POST'])
+def user_stats():
+    username = request.headers.get('username')
+    
+    if username is not None:
+        data = get_user_stats(username)
+        return jsonify(data)
+    
+    return jsonify({
+        'messsage': 'username not found'
+    }), 400
 
 
-@endpoints.route('/solved/<string:solved_question_user_name>')
-def solved_question(solved_question_user_name):
-    res = get_all_solved_links(solved_question_user_name, 'api')
-    total_links = 0
-    links = []
+@endpoints.route('/solved', methods=['POST'])
+def solved_question():
+    username = request.headers.get('username')
 
-    if res['status'] != 200:
-        return jsonify({
-            'status': res['status'],
-            'message': res['message']
-        })
+    if username:
+        res = get_all_solved_links(username, 'api')
+        total_links = 0
+        links = []
 
-    for link in res['links']:
-        links.append(BASE_URL + link.get('href'))
-        total_links += 1
-        
-    return jsonify({'total_solved': total_links, 'solved_links': links})
+        if res['status'] != 200:
+            return jsonify({
+                'status': res['status'],
+                'message': res['message']
+            })
+
+        for link in res['links']:
+            links.append(BASE_URL + link.get('href'))
+            total_links += 1
+            
+        return jsonify({'total_solved': total_links, 'solved_links': links})
+    
+    return jsonify({
+        'messsage': 'username not found'
+    }), 400
 
 
-@endpoints.route('/submission-details/<string:submission_details_user_name>')
-def submission_details(submission_details_user_name):
-    details = get_submissions_details(submission_details_user_name)
-    return jsonify(details)
+@endpoints.route('/submission-details', methods=['POST'])
+def submission_details():
+    username = request.headers.get('username')
+    
+    if username is not None:
+        details = get_submissions_details(username)
+        return jsonify(details)
+    
+    return jsonify({
+        'messsage': 'username not found'
+    }), 400
 
 
-@endpoints.route('/contest-details/<string:contest_details_user_name>')
-def contest_details(contest_details_user_name):
-    details = multiple_threads_scraping(contest_details_user_name)
-    return jsonify(details)
+@endpoints.route('/contest-details', methods=['POST'])
+def contest_details():
+    username = request.headers.get('username')
+    
+    if username is not None:
+        details = multiple_threads_scraping(username)
+        return jsonify(details)
+    
+    return jsonify({
+        'messsage': 'username not found'
+    }), 400
