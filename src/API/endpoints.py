@@ -74,10 +74,9 @@ def submission_details():
 @endpoints.route('/contest-details', methods=['POST'])
 def contest_details():
     username = request.headers.get('username')
-    next_value = request.headers.get('next_value')
 
     if username is not None:
-        details = multiple_threads_scraping(username, next_value)
+        details = multiple_threads_scraping(username)
         return jsonify(details), details.get('status')
 
     return jsonify({
