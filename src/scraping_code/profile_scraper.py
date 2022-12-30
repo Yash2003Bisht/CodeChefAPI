@@ -85,7 +85,6 @@ def get_user_stats(username: str):
         else:
             data[li.find('label').get_text().lower().replace(" ", "_").replace(":", "")] = value
 
-
     # badges
     widgets = soup.find_all('p', {'class': 'badge__title'})
     badges = {}
@@ -94,14 +93,13 @@ def get_user_stats(username: str):
         for widget in widgets:
             badge_name, badge = widget.get_text().split('-')
             badges.update({badge_name.strip().lower().replace(' ', '_'): badge.strip().lower().replace(' ', '_')})
-    
+
     except ValueError:
         badges = widgets[0].get_text()
 
     except Exception as err:
         print(err)
         badges = 'Internal server error'
-
 
     rating_header = soup.find_all('div', {'class': 'rating-header text-center'})[0].find_all('div')
     rating_ranks = soup.find('div', {'class': 'rating-ranks'}).find_all('strong')

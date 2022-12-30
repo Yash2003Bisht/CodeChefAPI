@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 try:
     # for API use
     from .user_headers import USER_AGENTS
-    
+
 except ImportError:
     # for direct use
     from user_headers import USER_AGENTS
@@ -215,7 +215,7 @@ def get_solution_text(question: str, lang: str, solution_id: str, status: str, t
         return False
 
 
-def get_solution_details(solution_url: str):
+def get_solution_details(solution_url: dict):
     """Solution details of a particular problem
 
     Args:
@@ -236,8 +236,8 @@ def get_solution_details(solution_url: str):
         for row in tr:
             col = row.find_all('td')
             solution_scraped = get_solution_text(solution_url.get_text(), col[6].get_text(),
-                                                col[0].get_text(), col[3].find('span')['title'],
-                                                col[4].get_text(), col[5].get_text())
+                                                 col[0].get_text(), col[3].find('span')['title'],
+                                                 col[4].get_text(), col[5].get_text())
 
         return 1 if solution_scraped else 0
 
