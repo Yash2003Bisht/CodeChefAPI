@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
-from scraping_code import BASE_URL, get_all_solved_links, get_user_stats, get_submissions_details, multiple_threads_scraping
+from scraping_code import BASE_URL, get_all_solved_links, get_user_stats, get_submissions_details, \
+    multiple_threads_scraping
 
 endpoints = Blueprint('endpoints', __name__)
 
@@ -21,13 +22,13 @@ def root():
 @endpoints.route('/user-stats', methods=['POST'])
 def user_stats():
     username = request.headers.get('username')
-    
+
     if username is not None:
         data = get_user_stats(username)
-        return jsonify(data)
-    
+        return jsonify(data), data.get('status')
+
     return jsonify({
-        'messsage': 'username not found'
+        'message': 'username not found'
     }), 400
 
 
@@ -44,40 +45,41 @@ def solved_question():
             return jsonify({
                 'status': res['status'],
                 'message': res['message']
-            })
+            }), res.get('status')
 
         for link in res['links']:
             links.append(BASE_URL + link.get('href'))
             total_links += 1
-            
-        return jsonify({'total_solved': total_links, 'solved_links': links})
-    
+
+        return jsonify({'total_solved': total_links, 'solved_links': links}), res.get('status')
+
     return jsonify({
-        'messsage': 'username not found'
+        'message': 'username not found'
     }), 400
 
 
 @endpoints.route('/submission-details', methods=['POST'])
 def submission_details():
     username = request.headers.get('username')
-    
+
     if username is not None:
         details = get_submissions_details(username)
-        return jsonify(details)
-    
+        return jsonify(details), details.get('status')
+
     return jsonify({
-        'messsage': 'username not found'
+        'message': 'username not found'
     }), 400
 
 
 @endpoints.route('/contest-details', methods=['POST'])
 def contest_details():
     username = request.headers.get('username')
-    
+    next_value = request.headers.get('next_value')
+
     if username is not None:
-        details = multiple_threads_scraping(username)
-        return jsonify(details)
-    
+        details = multiple_threads_scraping(username, next_value)
+        return jsonify(details), details.get('status')
+
     return jsonify({
-        'messsage': 'username not found'
+        'message': 'username not found'
     }), 400
