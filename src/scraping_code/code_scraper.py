@@ -85,7 +85,7 @@ def get_all_solved_links(username: str, usage: str) -> dict:
         usage (str): using as API or direct
 
     Returns:
-        dict: contains two value status and links(all un-scraped link list)/message
+        dict: contains two value status and links(all un-scraped link list) or message
     """
     url = f'{BASE_URL}/users/{username}'
     soup = get_soup_object(url)
@@ -267,8 +267,8 @@ def main(username: str):
     Returns:
         None
     """
-    res: dict = get_all_solved_links(username, 'normal')
-    total_links: int = len(res['links'])
+    res = get_all_solved_links(username, 'normal')
+    total_links = len(res['links'])
     executor = ThreadPoolExecutor(max(1, total_links))
     scraped = 0  # variable to take track of total solution scraped
 
@@ -294,4 +294,4 @@ def main(username: str):
 
 
 if __name__ == '__main__':
-    main('testing')
+    main('yash2003bisht')
