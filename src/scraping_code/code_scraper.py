@@ -3,6 +3,7 @@ import sys
 import random
 import time
 import requests
+from bs4.element import ResultSet
 from bs4 import BeautifulSoup
 from concurrent.futures import ThreadPoolExecutor
 
@@ -41,6 +42,9 @@ LANG = {
 }
 
 BASE_URL = 'https://www.codechef.com'
+MAX_RETIRES = 5
+MIN_TIME_SLEEP = 15  # in seconds
+MAX_TIME_SLEEP = 45  # in seconds
 
 
 def get_soup_object(url: str):
@@ -52,22 +56,28 @@ def get_soup_object(url: str):
     Returns:
         bs4.BeautifulSoup: BeautifulSoup object to parse the HTML
     """
-    for _ in range(5):
+    # loop to retry the request for MAX_RETRIES times
+    for _ in range(MAX_RETIRES):
         try:
             res = requests.get(url, timeout=120, headers=random.choice(USER_AGENTS))
             soup = BeautifulSoup(res.content, 'html.parser')
 
+            # check if the request is successful
             if res.status_code == 200:
                 return soup
+            else:
+                print(f'Bad status code -> {res.status_code}')
+                time.sleep(random.randrange(MIN_TIME_SLEEP, MAX_TIME_SLEEP))
 
         except Exception as err:
             print(f'\nerror -> {err}')
-            time.sleep(random.randrange(15, 45))
+            time.sleep(random.randrange(MIN_TIME_SLEEP, MAX_TIME_SLEEP))
 
+    # return None if soup object is not returned after MAX_RETRIES
     return None
 
 
-def get_all_solved_links(username: str, usage: str):
+def get_all_solved_links(username: str, usage: str) -> dict:
     """User all solved question links
 
     Args:
@@ -75,31 +85,31 @@ def get_all_solved_links(username: str, usage: str):
         usage (str): using as API or direct
 
     Returns:
-        list: all un-scraped link list
+        dict: contains two value status and links(all un-scraped link list)/message
     """
     url = f'{BASE_URL}/users/{username}'
     soup = get_soup_object(url)
     links = []
 
     try:
+        # get all solved questions links
         anchor_tag = soup.find('section', {'class': 'rating-data-section problems-solved'})
 
         if anchor_tag is None:
-
             if usage == 'api':
                 return {
                     'status': 404,
                     'message': 'Invalid username'
                 }
+
             else:
                 print('Invalid username')
                 quit()
 
-        else:
-            links = anchor_tag.find_all('a')
+        links = anchor_tag.find_all('a')
 
     except AttributeError:
-        if usage == 'normal':
+        if usage == 'api':
             return {
                 'status': 500,
                 'message': 'Internal server error'
@@ -112,16 +122,18 @@ def get_all_solved_links(username: str, usage: str):
     if usage == 'normal':
         base_dir = 'solutions'
 
+        if len(links) == 0:
+            return {
+                'links': [],
+                'no_solution_found': True
+            }
+
         if os.path.exists(base_dir):
+            # list all the files in the solutions directory
             already_scraped = os.listdir(base_dir)
 
             # filter out the already scraped link
-            unscraped_links = list(filter(lambda link: link.get_text() not in already_scraped, links))
-
-            return {
-                'status': 200,
-                'links': unscraped_links
-            }
+            links = list(filter(lambda link: link.get_text() not in already_scraped, links))
 
     return {
         'status': 200,
@@ -146,20 +158,24 @@ def get_clean_code(code: str):
     return code
 
 
-def get_solution_text(question: str, lang: str, solution_id: str, status: str, time: str, memory: str):
-    """Text solution of a problem
+def save_solution(question: str, lang: str, solution_id: str, status: str, execution_time: str, memory: str):
+    """Function is used to save the text of a specific solution to a file.
 
     Args:
-        question (str): question name
-        lang (str): programming language used
-        solution_id (str): solution id
-        status (str): status of solution (accepted, wrong answer, runtime error etc.)
-        time (str): execution time
-        memory (str): memory usage
+        question (str): name of the question the solution is for
+        lang (str): programming language used in the solution
+        solution_id (str): the id of the solution
+        status (str): status of the solution (e.g. 'accepted', 'wrong answer', 'runtime error', etc.)
+        execution_time (str): execution time of the solution
+        memory (str): memory usage of the solution
     """
     url = f'{BASE_URL}/viewplaintext/{solution_id}'
     soup = get_soup_object(url)
     comment_symbol = '//'
+
+    # comment symbols for PAS fpc -> pp
+    comment_symbol_start = '{'
+    comment_symbol_end = '}'
 
     try:
         text = get_clean_code(soup.get_text())
@@ -174,9 +190,6 @@ def get_solution_text(question: str, lang: str, solution_id: str, status: str, t
 
         if lang == 'py':
             comment_symbol = '#'
-        elif lang == 'pp':
-            comment_symbol_start = '{'
-            comment_symbol_end = '}'
         elif lang == 'adb':
             comment_symbol = '--'
 
@@ -187,7 +200,7 @@ def get_solution_text(question: str, lang: str, solution_id: str, status: str, t
                 file.write(
                     f'{comment_symbol_start} QUESTION URL: {BASE_URL}/problems/{question} {comment_symbol_end}\n'
                     f'{comment_symbol_start} STATUS: {status} {comment_symbol_end}\n'
-                    f'{comment_symbol_start} TIME: {time} {comment_symbol_end}\n'
+                    f'{comment_symbol_start} TIME: {execution_time} {comment_symbol_end}\n'
                     f'{comment_symbol_start} MEMORY: {memory} {comment_symbol_end}\n\n'
                     f'{text}'
                 )
@@ -195,7 +208,7 @@ def get_solution_text(question: str, lang: str, solution_id: str, status: str, t
                 file.write(
                     f'{comment_symbol} QUESTION URL: {BASE_URL}/problems/{question}\n'
                     f'{comment_symbol} STATUS: {status}\n'
-                    f'{comment_symbol} TIME: {time}\n'
+                    f'{comment_symbol} TIME: {execution_time}\n'
                     f'{comment_symbol} MEMORY: {memory}\n\n'
                     f'{text}'
                 )
@@ -211,21 +224,21 @@ def get_solution_text(question: str, lang: str, solution_id: str, status: str, t
         return False
 
     except Exception as err:
-        print(f'\error -> {err}')
+        print(f'\nerror -> {err}')
         return False
 
 
-def get_solution_details(solution_url: dict):
-    """Solution details of a particular problem
+def scrape_and_save(solution_details: ResultSet):
+    """Retrieves the details of a specific solution of a Codechef problem.
 
     Args:
-        solution_url (str): solution url
+        solution_details (ResultSet): contains information about a specific solution.
 
     Returns:
-        int: 1 if details scraped else 0
+        int: 1 if solution details are successfully scraped and saved, else 0.
     """
     try:
-        url = BASE_URL + solution_url.get('href')
+        url = BASE_URL + solution_details.get('href')
         soup = get_soup_object(url)
         tr = soup.find('tbody').find_all('tr')
         solution_scraped = False
@@ -235,9 +248,9 @@ def get_solution_details(solution_url: dict):
 
         for row in tr:
             col = row.find_all('td')
-            solution_scraped = get_solution_text(solution_url.get_text(), col[6].get_text(),
-                                                 col[0].get_text(), col[3].find('span')['title'],
-                                                 col[4].get_text(), col[5].get_text())
+            solution_scraped = save_solution(solution_details.get_text(), col[6].get_text(),
+                                             col[0].get_text(), col[3].find('span')['title'],
+                                             col[4].get_text(), col[5].get_text())
 
         return 1 if solution_scraped else 0
 
@@ -246,29 +259,39 @@ def get_solution_details(solution_url: dict):
 
 
 def main(username: str):
-    """Main function for scraping
+    """Main function for scraping Codechef solutions for a specific user.
 
     Args:
-        username (str): profile name on codechef
-    """
-    res = get_all_solved_links(username, 'normal')
-    total_links = len(res['links'])
-    executor = ThreadPoolExecutor(max(1, total_links))
-    scraped = 0
+        username (str): profile name on codechef.
 
-    if total_links == 0:
+    Returns:
+        None
+    """
+    res: dict = get_all_solved_links(username, 'normal')
+    total_links: int = len(res['links'])
+    executor = ThreadPoolExecutor(max(1, total_links))
+    scraped = 0  # variable to take track of total solution scraped
+
+    if res.get('no_solution_found'):
+        print('No Solution Found')
+        quit()
+
+    elif total_links == 0:
         print('All solution already scraped')
         quit()
 
     print(f'total solution found: {total_links}')
     sys.stdout.write(f'\r scraped {scraped}/{total_links}')
 
-    for data in executor.map(get_solution_details, res['links']):
+    for data in executor.map(scrape_and_save, res['links']):
         scraped += data
         sys.stdout.write(f'\r scraped {scraped}/{total_links}')
 
-    print('\nAll solution scraped')
+    if scraped == total_links:
+        print('\nAll solution scraped')
+    else:
+        print('\nSomething went Wrong')
 
 
 if __name__ == '__main__':
-    main('yash2003bisht')
+    main('testing')

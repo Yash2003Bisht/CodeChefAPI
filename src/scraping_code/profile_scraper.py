@@ -16,7 +16,7 @@ def get_driver_object():
     """Selenium webdriver object
 
     Returns:
-        WebDriver (selenium.webdriver.chrome.webdriver.WebDriver): Webdriver object for scraping data
+        WebDriver (selenium.webdriver.chrome.webdriver.WebDriver): Webdriver object for scraping data using selenium
     """
     try:
         chrome_options = Options()
@@ -25,6 +25,8 @@ def get_driver_object():
         chrome_options.add_argument("--no-sandbox")  # linux only
         chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("--headless")
+
+        # driver object
         driver = webdriver.Chrome(ChromeDriverManager().install(), options=chrome_options)
 
         return driver
@@ -35,7 +37,7 @@ def get_driver_object():
 
 
 def get_user_stats(username: str):
-    """User Profile Scraper
+    """Scrapes and returns user profile information from codechef website
 
     Args:
         username (str): user profile name
@@ -175,11 +177,14 @@ def get_submissions_details(username):
 
 
 def get_contest_details(username: str, contest: element.Tag):
-    """Contest details scraper
+    """Scrapes and returns contest details of a user from codechef website
 
     Args:
         username (str): user profile name
-        contest (bs4.element.Tag): bs4.element.Tag object
+        contest (bs4.element.Tag): bs4.element.Tag object containing contest details
+
+    Returns:
+        dict: containing contest name, links of all solved questions, rank and score of the user
     """
     try:
         contest_name = contest.find('strong').get_text().replace(':', '')
@@ -214,13 +219,13 @@ def get_contest_details(username: str, contest: element.Tag):
 
 
 def multiple_threads_scraping(username: str):
-    """Multiple threads scraping for contest details page
+    """Scrapes contest details of a user using multiple threads.
 
     Args:
         username (str): user profile name
 
     Returns:
-        dict: scraped data
+        dict: containing scraped data, including contest details, the total number of contests participated in and total number of contests scraped.
     """
     url = BASE_URL + '/users/' + username
     soup = get_soup_object(url)
