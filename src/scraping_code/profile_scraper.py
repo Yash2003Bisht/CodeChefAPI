@@ -1,6 +1,6 @@
 import re
 import time
-from .code_scraper import get_soup_object, BASE_URL
+from src.scraping_code.code_scraper import get_response, BASE_URL
 from concurrent.futures import ThreadPoolExecutor
 from itertools import repeat
 from bs4 import BeautifulSoup, element
@@ -46,7 +46,7 @@ def get_user_stats(username: str):
         JSON: JSON data containing all information about the user profile 
     """
     url = BASE_URL + '/users/' + username
-    soup = get_soup_object(url)
+    soup = get_response(url)
     data = {}
     stars = 0
 
@@ -228,7 +228,7 @@ def multiple_threads_scraping(username: str):
         dict: containing scraped data, including contest details, the total number of contests participated in and total number of contests scraped.
     """
     url = BASE_URL + '/users/' + username
-    soup = get_soup_object(url)
+    soup = get_response(url)
     data = {}
 
     try:

@@ -1,19 +1,10 @@
 import os
 import sys
-import random
-import time
-import requests
+from itertools import repeat
 from bs4.element import ResultSet
-from bs4 import BeautifulSoup
 from concurrent.futures import ThreadPoolExecutor
-
-try:
-    # for API use
-    from .user_headers import USER_AGENTS
-
-except ImportError:
-    # for direct use
-    from user_headers import USER_AGENTS
+from src.helper_functions import *
+from src.scraping_code.codechef_core_api_endpoints import submission_endpoint
 
 LANG = {
     'PYTH 3': 'py',
@@ -41,41 +32,6 @@ LANG = {
     'rust': 'rs',
 }
 
-BASE_URL = 'https://www.codechef.com'
-MAX_RETIRES = 5
-MIN_TIME_SLEEP = 15  # in seconds
-MAX_TIME_SLEEP = 45  # in seconds
-
-
-def get_soup_object(url: str):
-    """Get Soup Object
-
-    Args:
-        url (str): profile url on codechef
-
-    Returns:
-        bs4.BeautifulSoup: BeautifulSoup object to parse the HTML
-    """
-    # loop to retry the request for MAX_RETRIES times
-    for _ in range(MAX_RETIRES):
-        try:
-            res = requests.get(url, timeout=120, headers=random.choice(USER_AGENTS))
-            soup = BeautifulSoup(res.content, 'html.parser')
-
-            # check if the request is successful
-            if res.status_code == 200:
-                return soup
-            else:
-                print(f'Bad status code -> {res.status_code}')
-                time.sleep(random.randrange(MIN_TIME_SLEEP, MAX_TIME_SLEEP))
-
-        except Exception as err:
-            print(f'\nerror -> {err}')
-            time.sleep(random.randrange(MIN_TIME_SLEEP, MAX_TIME_SLEEP))
-
-    # return None if soup object is not returned after MAX_RETRIES
-    return None
-
 
 def get_all_solved_links(username: str, usage: str) -> dict:
     """User all solved question links
@@ -88,7 +44,7 @@ def get_all_solved_links(username: str, usage: str) -> dict:
         dict: contains two value status and links(all un-scraped link list) or message
     """
     url = f'{BASE_URL}/users/{username}'
-    soup = get_soup_object(url)
+    soup = get_response(url)
     links = []
 
     try:
@@ -141,23 +97,6 @@ def get_all_solved_links(username: str, usage: str) -> dict:
     }
 
 
-def get_clean_code(code: str):
-    """Remove unnecessary \n from the code
-
-    Args:
-        code (str): text code
-
-    Returns:
-        str: clean code
-    """
-    for i in range(len(code)):
-        if code[i] != '\n':
-            code = code[i:]
-            break
-
-    return code
-
-
 def save_solution(question: str, lang: str, solution_id: str, status: str, execution_time: str, memory: str):
     """Function is used to save the text of a specific solution to a file.
 
@@ -170,7 +109,7 @@ def save_solution(question: str, lang: str, solution_id: str, status: str, execu
         memory (str): memory usage of the solution
     """
     url = f'{BASE_URL}/viewplaintext/{solution_id}'
-    soup = get_soup_object(url)
+    soup = get_response(url)
     comment_symbol = '//'
 
     # comment symbols for PAS fpc -> pp
@@ -228,31 +167,29 @@ def save_solution(question: str, lang: str, solution_id: str, status: str, execu
         return False
 
 
-def scrape_and_save(solution_details: ResultSet):
+def scrape_and_save(username: str, solution_details: ResultSet):
     """Retrieves the details of a specific solution of a Codechef problem.
 
     Args:
+        username (str): profile name on codechef
         solution_details (ResultSet): contains information about a specific solution.
 
     Returns:
         int: 1 if solution details are successfully scraped and saved, else 0.
     """
     try:
-        url = BASE_URL + solution_details.get('href')
-        soup = get_soup_object(url)
-        tr = soup.find('tbody').find_all('tr')
         solution_scraped = False
+        ques_tag = solution_details.get_text()
+        submissions = submission_endpoint(ques_tag, username)
 
-        if tr is None:
-            return 0
+        if submissions:
+            for submission in submissions:
+                solution_scraped = save_solution(ques_tag, submission['lang'], submission['solution_id'],
+                                                 submission['status'], submission['execution_time'], submission['memory'])
 
-        for row in tr:
-            col = row.find_all('td')
-            solution_scraped = save_solution(solution_details.get_text(), col[6].get_text(),
-                                             col[0].get_text(), col[3].find('span')['title'],
-                                             col[4].get_text(), col[5].get_text())
+            return 1 if solution_scraped else 0
 
-        return 1 if solution_scraped else 0
+        return 0
 
     except AttributeError:
         return 0
@@ -269,7 +206,7 @@ def main(username: str):
     """
     res = get_all_solved_links(username, 'normal')
     total_links = len(res['links'])
-    executor = ThreadPoolExecutor(max(1, total_links))
+    executor = ThreadPoolExecutor(min(10, max(total_links, 1)))
     scraped = 0  # variable to take track of total solution scraped
 
     if res.get('no_solution_found'):
@@ -283,14 +220,16 @@ def main(username: str):
     print(f'total solution found: {total_links}')
     sys.stdout.write(f'\r scraped {scraped}/{total_links}')
 
-    for data in executor.map(scrape_and_save, res['links']):
+    for data in executor.map(scrape_and_save, repeat(username), res['links']):
         scraped += data
         sys.stdout.write(f'\r scraped {scraped}/{total_links}')
 
     if scraped == total_links:
         print('\nAll solution scraped')
+    elif scraped > 0:
+        print('\nUnable to scrape all solutions')
     else:
-        print('\nSomething went Wrong')
+        print('\nUnable to scrape')
 
 
 if __name__ == '__main__':
