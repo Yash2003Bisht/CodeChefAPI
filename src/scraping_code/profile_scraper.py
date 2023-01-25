@@ -1,15 +1,12 @@
 import re
-import time
-from src.scraping_code.code_scraper import get_response, BASE_URL
+from scraping_code.code_scraper import get_response, BASE_URL
 from concurrent.futures import ThreadPoolExecutor
 from itertools import repeat
 from bs4 import BeautifulSoup, element
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.by import By
+from scraping_code.codechef_core_api_endpoints import contest_endpoint
 
 
 def get_driver_object():
@@ -188,30 +185,7 @@ def get_contest_details(username: str, contest: element.Tag):
     """
     try:
         contest_name = contest.find('strong').get_text().replace(':', '')
-
-        # selenium scraping
-        contest_url = BASE_URL + f'/rankings/{contest_name}?itemsPerPage=100&order=asc&page=1&search={username}&sortBy=rank'
-        driver = get_driver_object()
-
-        if driver is None:
-            return {}
-
-        driver.get(contest_url)
-        WebDriverWait(driver, 15).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "td"))
-        )
-
-        # additional wait to load the page
-        time.sleep(5)
-
-        contest_soup = BeautifulSoup(driver.page_source, "html.parser")
-        table_data = contest_soup.find_all('td')
-
-        return {
-            contest_name: list(map(lambda a_tag: BASE_URL + a_tag.get('href'), contest.find_all('a'))),
-            'rank': int(table_data[0].get_text().replace('Rank', '')),
-            'score': float(re.sub(r'\(.*\)', '', table_data[2].get_text().replace('Total Score', ''))),
-        }
+        return contest_endpoint(contest_name, username)
 
     except Exception as err:
         print(f'error -> {err}')
@@ -249,11 +223,11 @@ def multiple_threads_scraping(username: str):
 
     if article_tag is not None:
         contest_participate = article_tag.find_all('p')[1:]
-        total_contest = max(1, len(contest_participate))
+        total_contest = len(contest_participate)
         total_scraped = 0
         contest_details = []
 
-        executor = ThreadPoolExecutor(min(10, total_contest))
+        executor = ThreadPoolExecutor(min(10, max(total_contest, 1)))
 
         for contest_detail in executor.map(get_contest_details, repeat(username), contest_participate):
             if len(contest_detail) > 1:

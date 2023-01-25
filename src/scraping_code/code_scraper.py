@@ -3,8 +3,8 @@ import sys
 from itertools import repeat
 from bs4.element import ResultSet
 from concurrent.futures import ThreadPoolExecutor
-from src.helper_functions import *
-from src.scraping_code.codechef_core_api_endpoints import submission_endpoint
+from helper_functions import *
+from scraping_code.codechef_core_api_endpoints import submission_endpoint
 
 LANG = {
     'PYTH 3': 'py',

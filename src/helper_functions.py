@@ -3,7 +3,7 @@ import time
 import requests
 from typing import Any
 from bs4 import BeautifulSoup
-from src.user_agents import USER_AGENTS
+from user_agents import USER_AGENTS
 
 BASE_URL = 'https://www.codechef.com'
 MAX_RETIRES = 5
