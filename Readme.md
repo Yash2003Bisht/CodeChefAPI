@@ -1,16 +1,25 @@
 # CodeChefAPI
-The codechef API is for educational purposes only. [Heroku deployment](https://codechef-api-education-only.herokuapp.com)
+With CodeChef API you can get stats, contest details, all solved question links, and submission details for any user.
 
 ## Endpoints
-1. user-stats/<user_name>
-2. contest-details/<user_name>
-3. solved/<user_name>
-4. submission-details/<user_name>
+1. user-stats
+2. contest-details
+3. solved
+4. submission-details
 
 ### user-stats
 Returns brief details about the user, such as the total number of contests participated, country, division, global rank, etc.
 
-#### sample
+#### sample code
+```pycon
+import requests
+
+url = "https://domain.com/user-stats"
+res = requests.post(url, headers={"username": "yash2003bisht"})
+print(res.json())
+```
+
+#### sample response
 ```json lines
 {
   "codechef_pro_plan": "No Active Plan",
@@ -32,6 +41,17 @@ Returns brief details about the user, such as the total number of contests parti
 
 ### contest-details
 Returns all details about user contests participated.
+
+#### sample code
+```pycon
+import requests
+
+url = "https://domain.com/contest-details"
+res = requests.post(url, headers={"username": "yash2003bisht"})
+print(res.json())
+```
+
+#### sample response
 ```json lines
 {
   "contest_details": [
@@ -64,6 +84,17 @@ Returns all details about user contests participated.
 
 ### solved
 Returns a list of links containing all questions solved by user.
+
+#### sample code
+```pycon
+import requests
+
+url = "https://domain.com/solved"
+res = requests.post(url, headers={"username": "yash2003bisht"})
+print(res.json())
+```
+
+#### sample response
 ```json lines
 {
   "solved_links": [
@@ -75,6 +106,17 @@ Returns a list of links containing all questions solved by user.
 
 ### submission-details
 Returns data from the submissions graph section.
+
+#### sample code
+```pycon
+import requests
+
+url = "https://domain.com/submission-details"
+res = requests.post(url, headers={"username": "yash2003bisht"})
+print(res.json())
+```
+
+#### sample response
 ```json lines
 {
   "compile_error": 1,
@@ -86,4 +128,4 @@ Returns data from the submissions graph section.
 }
 ```
 
-*Note*: The **submission-details** and **contest-details** endpoints may take longer to fetch the data, as the data are loaded dynamically, and we are using selenium to scrape it.
+*Note*: **submission-details** endpoints may take a longer time to fetch data, as there is some animation in data that delays loading graph details, so we are using **selenium** to scrape it.

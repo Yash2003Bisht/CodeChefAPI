@@ -1,5 +1,5 @@
 from helper_functions import get_response
-
+from typing import Any
 
 headers = {
     "authority": "www.codechef.com",
@@ -24,7 +24,7 @@ headers = {
 }
 
 
-def contest_endpoint(contest_name: str, username: str) -> dict:
+def contest_endpoint(contest_name: str, username: str) -> Any:
     """Codechef contest details endpoint
 
     Args:
@@ -38,7 +38,8 @@ def contest_endpoint(contest_name: str, username: str) -> dict:
 
     # add aditional details
     headers["path"] = f"/api/rankings/{contest_name}?itemsPerPage=100&order=asc&page=1&search={username}&sortBy=rank"
-    headers["referer"] = f"https://www.codechef.com/rankings/{contest_name}?itemsPerPage=100&order=asc&page=1&search={username}&sortBy=rank"
+    headers[
+        "referer"] = f"https://www.codechef.com/rankings/{contest_name}?itemsPerPage=100&order=asc&page=1&search={username}&sortBy=rank"
 
     res_data = get_response(url, "json", headers)
     details = {}
@@ -49,7 +50,7 @@ def contest_endpoint(contest_name: str, username: str) -> dict:
         details['rank'] = res_data['list'][0]['rank']
         details['total_score'] = res_data['list'][0]['score']
 
-        problems_solved  = {}
+        problems_solved = {}
         total_problems = []
         total_solved = 0
 
@@ -57,19 +58,17 @@ def contest_endpoint(contest_name: str, username: str) -> dict:
             problems_solved[key] = value
             problems_solved[key]['question_link'] = f"https://www.codechef.com/LP1TO201/problems/{key}"
             problems_solved[key]['submission_link'] = \
-                            f"https://www.codechef.com/rankings/{contest_name}/bestsolution/{key},{username}"
+                f"https://www.codechef.com/rankings/{contest_name}/bestsolution/{key},{username}"
             total_solved += 1
-        
+
         for problem in res_data['problems']:
             data = problem
             data['question_link'] = f"https://www.codechef.com/LP1TO201/problems/{data['code']}"
             total_problems.append(data)
 
-        
         details['problems_solved'] = problems_solved
         details['total_problems'] = total_problems
         details['total_solved'] = total_solved
-        
 
         return details
 

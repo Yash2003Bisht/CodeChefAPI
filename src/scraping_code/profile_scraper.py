@@ -20,7 +20,6 @@ def get_all_solved_links(username: str) -> dict:
     """
     url = f'{BASE_URL}/users/{username}'
     soup = get_response(url)
-    links = []
 
     try:
         # get all solved questions links

@@ -10,10 +10,10 @@ def root():
     data = {
         'message': 'Welcome to codechefAPI, this api is for educational purpose only',
         'endpoints': {
-            'user-stats/<user_profile_name>': 'return user profile data details',
-            'solved/<user_profile_name>': 'return user all solved question links',
-            'submission-details/<user_profile_name>': 'return details from submission graph',
-            'contest-details/<user_profile_name>': 'return user all contest participation details'
+            'user-stats': 'return user profile data details',
+            'solved': 'return user all solved question links',
+            'submission-details': 'return details from submission graph',
+            'contest-details': 'return user all contest participation details'
         }
     }
     return jsonify(data)
