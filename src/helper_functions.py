@@ -52,20 +52,3 @@ def get_response(url: str, r_type: Any = 'soup', custom_headers: dict = None):
 
     # return None if soup object or json is not returned after MAX_RETRIES
     return None
-
-
-def get_clean_code(code: str):
-    """Remove unnecessary \n from the code
-
-    Args:
-        code (str): text code
-
-    Returns:
-        str: clean code
-    """
-    for i in range(len(code)):
-        if code[i] != '\n':
-            code = code[i:]
-            break
-
-    return code

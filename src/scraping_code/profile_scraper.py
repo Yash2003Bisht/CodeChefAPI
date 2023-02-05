@@ -1,5 +1,4 @@
 import re
-from scraping_code.code_scraper import get_response, BASE_URL
 from concurrent.futures import ThreadPoolExecutor
 from itertools import repeat
 from bs4 import BeautifulSoup, element
@@ -7,6 +6,44 @@ from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
 from scraping_code.codechef_core_api_endpoints import contest_endpoint
+from helper_functions import get_response, BASE_URL
+
+
+def get_all_solved_links(username: str) -> dict:
+    """User all solved question links
+
+    Args:
+        username (str): profile name on codechef
+
+    Returns:
+        dict: contains two value status and links(all un-scraped link list) or message
+    """
+    url = f'{BASE_URL}/users/{username}'
+    soup = get_response(url)
+    links = []
+
+    try:
+        # get all solved questions links
+        anchor_tag = soup.find('section', {'class': 'rating-data-section problems-solved'})
+
+        if anchor_tag is None:
+            return {
+                'status': 404,
+                'message': 'Invalid username'
+            }
+
+        links = anchor_tag.find_all('a')
+
+    except AttributeError:
+        return {
+            'status': 500,
+            'message': 'Internal server error'
+        }
+
+    return {
+        'status': 200,
+        'links': links
+    }
 
 
 def get_driver_object():

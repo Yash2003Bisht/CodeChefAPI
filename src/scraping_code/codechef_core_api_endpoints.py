@@ -24,40 +24,6 @@ headers = {
 }
 
 
-def submission_endpoint(question_tag: str, username: str) -> list:
-    """Codechef submission details endpoint
-
-    Args:
-        question_tag (str): unique question tag
-        username (str): profile name on codechef
-
-    Returns:
-        list or None: return a list of dictionaries if the request is successful, otherwise, return None
-    """
-    url = f"https://www.codechef.com/api/submissions/PRACTICE/{question_tag}?limit=20&page=0&language=&status=&usernames={username}"
-
-    # add aditional details
-    headers["path"] = f"/api/submissions/PRACTICE/{question_tag}?limit=20&page=0&language=&status=&usernames={username}"
-    headers["referer"] = f"https://www.codechef.com/status/{question_tag}?limit=20&page=0&usernames={username}&language=&status="
-
-    res_data = get_response(url, "json", headers)
-    details = []
-
-    if res_data is not None:
-        for data in res_data['data']:
-            details.append({
-                'solution_id': data['id'],
-                'lang': data['language'],
-                'status': data['tooltip'],
-                'execution_time': data['time'],
-                'memory': data['memory']
-            })
-
-        return details
-
-    return None
-
-
 def contest_endpoint(contest_name: str, username: str) -> dict:
     """Codechef contest details endpoint
 
@@ -111,5 +77,4 @@ def contest_endpoint(contest_name: str, username: str) -> dict:
 
 
 if __name__ == "__main__":
-    print(submission_endpoint("MANAPTS", "yash2003bisht"))
-    # print(contest_endpoint("LP1TO201", "yash2003bisht"))
+    print(contest_endpoint("LP1TO201", "yash2003bisht"))

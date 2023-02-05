@@ -37,7 +37,7 @@ def solved_question():
     username = request.headers.get('username')
 
     if username:
-        res = get_all_solved_links(username, 'api')
+        res = get_all_solved_links(username)
         total_links = 0
         links = []
 
