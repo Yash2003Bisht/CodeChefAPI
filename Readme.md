@@ -14,7 +14,7 @@ Returns brief details about the user, such as the total number of contests parti
 ```pycon
 import requests
 
-url = "https://domain.com/user-stats"
+url = "http://localhost:5000/user-stats"
 res = requests.post(url, headers={"username": "yash2003bisht"})
 print(res.json())
 ```
@@ -22,20 +22,26 @@ print(res.json())
 #### sample response
 ```json lines
 {
-  "codechef_pro_plan": "No Active Plan",
-  "contest_participate": 2,
-  "country": "India",
-  "country_rank": 93736,
-  "division": "(Div 4)",
-  "global_rank": 100753,
-  "link": "https://yash2003bisht.github.io/",
-  "problem_fullysolved": 206,
-  "problem_partiallysolved": 0,
-  "rating": 1346,
-  "student/professional": "Other",
-  "teams_list": "https://www.codechef.com/users/yash2003bisht/teams",
-  "total_stars": 1,
-  "username": "yash2003bisht"
+    "badges": {
+        "1v1_challenge_badge": "bronze_badge",
+        "daily_streak": "gold_badge",
+        "problem_solver": "silver_badge"
+    },
+    "codechef_pro_plan": "No Active Plan",
+    "contest_participate": 5,
+    "country": "India",
+    "country_rank": 84362,
+    "discuss_profile": "https://discuss.codechef.com/u/yash2003bisht",
+    "division": "(Div 4)",
+    "global_rank": 90654,
+    "link": "https://yash2003bisht.github.io/",
+    "problem_fully_solved": 444,
+    "problem_partially_solved": 0,
+    "rating": 1279,
+    "student/professional": "Other",
+    "teams_list": "https://www.codechef.com/users/yash2003bisht/teams",
+    "total_stars": 1,
+    "username": "yash2003bisht"
 }
 ```
 
@@ -46,7 +52,7 @@ Returns all details about user contests participated.
 ```pycon
 import requests
 
-url = "https://domain.com/contest-details"
+url = "http://localhost:5000/contest-details"
 res = requests.post(url, headers={"username": "yash2003bisht"})
 print(res.json())
 ```
@@ -89,7 +95,7 @@ Returns a list of links containing all questions solved by user.
 ```pycon
 import requests
 
-url = "https://domain.com/solved"
+url = "http://localhost:5000/solved"
 res = requests.post(url, headers={"username": "yash2003bisht"})
 print(res.json())
 ```
@@ -98,7 +104,7 @@ print(res.json())
 ```json lines
 {
   "solved_links": [
-    "https://www.codechef.com/status/TEAMSEL,testing"
+    "https://www.codechef.com/status/FLOW006?usernames=yash2003bisht"
   ],
   "total_solved": 1
 }
@@ -111,7 +117,7 @@ Returns data from the submissions graph section.
 ```pycon
 import requests
 
-url = "https://domain.com/submission-details"
+url = "http://localhost:5000/submission-details"
 res = requests.post(url, headers={"username": "yash2003bisht"})
 print(res.json())
 ```
